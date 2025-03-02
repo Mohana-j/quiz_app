@@ -26,12 +26,12 @@ exports.getQuizQuestions = (req, res) => {
     // ✅ Step 2: Fetch Questions with Options
     const questionQuery = `
       SELECT q.question_id, q.question_text, q.correct_option, 
-             o.option_id, o.option_text, o.is_correct
-      FROM questions q
-      LEFT JOIN options o ON q.quiz_id = o.quiz_id  -- ✅ FIXED JOIN
-      WHERE q.quiz_id = ?
-      ORDER BY RAND()
-      LIMIT 10;
+       o.option_id, o.option_text, o.is_correct
+FROM questions q
+LEFT JOIN options o ON q.question_id = o.question_id  -- ✅ FIXED JOIN
+WHERE q.quiz_id = ?
+ORDER BY q.question_id, RAND();
+
     `;
 
     db.query(questionQuery, [quizId], (err, results) => {
@@ -65,8 +65,10 @@ exports.getQuizQuestions = (req, res) => {
         }
       });
 
-      console.log(`✅ Sending ${Object.values(formattedQuestions).length} questions for ${category}`);
-      res.json(Object.values(formattedQuestions));
+      const finalQuestions = Object.values(formattedQuestions).filter(q => q.options.length === 4);
+
+      console.log(`✅ Sending ${finalQuestions.length} questions with 4 options each for ${category}`);
+      res.json(finalQuestions);
     });
   });
 };
@@ -83,6 +85,7 @@ exports.submitQuiz = (req, res) => {
 
   let score = 0;
   const totalQuestions = answers.length;
+  const responseDetails = [];
 
   // ✅ Fix: Convert `answers.map((a) => a.question_id)` into a properly formatted list
   const questionIds = answers.map((a) => a.question_id);
@@ -104,12 +107,26 @@ exports.submitQuiz = (req, res) => {
       return res.status(500).json({ message: "Database error" });
     }
 
+    // ✅ Checking User Answers and Storing Response
     correctAnswers.forEach((correct) => {
-      const userAnswer = answers.find((a) => a.question_id === correct.question_id);
-      if (userAnswer && userAnswer.answer === correct.correct_option) {
-        score++;
-      }
-    });
+        const userAnswer = answers.find((a) => a.question_id === correct.question_id);
+        let isCorrect = false;
+  
+        if (userAnswer) {
+          isCorrect = userAnswer.answer === correct.correct_option;
+        }
+  
+        if (isCorrect) {
+          score++;
+        }
+  
+        responseDetails.push({
+          question_id: correct.question_id,
+          selected_option: userAnswer ? userAnswer.answer : "Not Answered",
+          correct_option: correct.correct_option,
+          result: isCorrect ? "Correct" : userAnswer ? "Incorrect" : "Not Answered",
+        });
+      });
 
     // ✅ Store user score
     const insertAttemptQuery = `

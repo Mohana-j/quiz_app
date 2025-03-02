@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const authRoutes = require("./routes/authRoutes"); // ✅ Import Auth Routes
+const quizRoutes = require("./routes/quizRoutes"); 
+
 
 const app = express();
 
@@ -10,7 +12,7 @@ app.use(express.json());
 
 // ✅ Register Routes with `/api` prefix
 app.use("/api", authRoutes);
-
+app.use("/api/quiz", quizRoutes);
 // ✅ Error Handling Middleware
 app.use((err, req, res, next) => {
     console.error("❌ Server Error:", err);

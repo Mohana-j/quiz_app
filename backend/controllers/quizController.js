@@ -1,117 +1,111 @@
 const db = require("../config/db");
-const fetch = require("node-fetch"); // ✅ Ensure this is installed: `npm install node-fetch`
 
 /* =========================================
-   🚀 FETCH QUIZ QUESTIONS
+   🚀 FETCH QUIZ QUESTIONS FROM DATABASE
 ========================================= */
 exports.getQuizQuestions = (req, res) => {
   const category = decodeURIComponent(req.params.category);
+  console.log(`🟢 Fetching quiz for category: ${category}`);
 
-  // ✅ Step 1: Check if questions exist in DB
-  const query = `
-    SELECT q.question_id, q.question_text, q.correct_option,
-           o.option_id, o.option_text, o.is_correct 
-    FROM questions q
-    JOIN options o ON q.question_id = o.question_id
-    JOIN quizzes quiz ON q.quiz_id = quiz.quiz_id
-    WHERE quiz.category = ?
-    LIMIT 10
-  `;
-
-  db.query(query, [category], async (err, results) => {
-    if (err) {
-      console.error("❌ Database Error:", err);
-      return res.status(500).json({ message: "Database error", error: err });
+  // ✅ Step 1: Get `quiz_id` from quizzes table
+  const quizQuery = "SELECT quiz_id FROM quizzes WHERE category = ?";
+  
+  db.query(quizQuery, [category], (quizErr, quizResult) => {
+    if (quizErr) {
+      console.error("❌ Error fetching quiz:", quizErr);
+      return res.status(500).json({ message: "Database error", error: quizErr });
     }
 
-    // ✅ Step 2: If DB has questions, return them
-    if (results.length > 0) {
+    if (quizResult.length === 0) {
+      console.warn(`⚠️ No quiz found for category: ${category}`);
+      return res.status(404).json({ message: "No quiz found for this category" });
+    }
+
+    const quizId = quizResult[0].quiz_id;
+
+    // ✅ Step 2: Fetch Questions with Options
+    const questionQuery = `
+      SELECT q.question_id, q.question_text, q.correct_option, 
+             o.option_id, o.option_text, o.is_correct
+      FROM questions q
+      LEFT JOIN options o ON q.quiz_id = o.quiz_id  -- ✅ FIXED JOIN
+      WHERE q.quiz_id = ?
+      ORDER BY RAND()
+      LIMIT 10;
+    `;
+
+    db.query(questionQuery, [quizId], (err, results) => {
+      if (err) {
+        console.error("❌ Error fetching questions:", err);
+        return res.status(500).json({ message: "Database error", error: err });
+      }
+
+      if (results.length === 0) {
+        console.warn(`⚠️ No questions found for category: ${category}`);
+        return res.status(404).json({ message: "No questions available for this quiz" });
+      }
+
+      // ✅ Step 3: Organize Questions and Options
       const formattedQuestions = {};
       results.forEach((row) => {
         if (!formattedQuestions[row.question_id]) {
           formattedQuestions[row.question_id] = {
             question_id: row.question_id,
             question_text: row.question_text,
+            correct_option: row.correct_option,
             options: [],
           };
         }
-        formattedQuestions[row.question_id].options.push({
-          option_id: row.option_id,
-          text: row.option_text,
-          is_correct: row.is_correct, // (Don't send this in frontend)
-        });
+        if (row.option_id) { // Ensure option exists
+          formattedQuestions[row.question_id].options.push({
+            option_id: row.option_id,
+            text: row.option_text,
+            is_correct: row.is_correct,
+          });
+        }
       });
-      return res.json(Object.values(formattedQuestions));
-    }
 
-    // ✅ Step 3: If no questions found, fetch from API
-    console.log(`ℹ️ No questions in DB for ${category}, fetching from API...`);
-    fetchQuestionsFromAPI(category, res);
+      console.log(`✅ Sending ${Object.values(formattedQuestions).length} questions for ${category}`);
+      res.json(Object.values(formattedQuestions));
+    });
   });
 };
 
 /* =========================================
-   🌍 FETCH QUESTIONS FROM OPEN-TDB API
-========================================= */
-const fetchQuestionsFromAPI = async (category, res) => {
-  const openTDBCategoryMapping = {
-    "general knowledge": 9,
-    "science": 17,
-    "history": 23,
-    "geography": 22,
-    "movies": 11,
-    "sports": 21,
-    "ai & robotics": 18,
-    "world facts": 24,
-  };
-
-  const openTDBCategory = openTDBCategoryMapping[category.toLowerCase()];
-  if (!openTDBCategory) {
-    return res.status(400).json({ message: "Invalid category" });
-  }
-
-  try {
-    const response = await fetch(`https://opentdb.com/api.php?amount=10&category=${openTDBCategory}&type=multiple`);
-    if (!response.ok) throw new Error("Failed to fetch from API");
-
-    const data = await response.json();
-    if (!data.results) throw new Error("Invalid API response");
-
-    const questions = data.results.map((item) => ({
-      question_text: item.question,
-      correct_option: item.correct_answer,
-      options: [...item.incorrect_answers, item.correct_answer].sort(() => Math.random() - 0.5),
-    }));
-
-    res.json(questions);
-  } catch (error) {
-    console.error("❌ API Error:", error);
-    return res.status(500).json({ message: "Failed to fetch quiz questions" });
-  }
-};
-
-/* =========================================
-   ✅ SUBMIT QUIZ
+   ✅ SUBMIT QUIZ (SAVE USER ATTEMPT)
 ========================================= */
 exports.submitQuiz = (req, res) => {
   const { user_id, quiz_id, answers } = req.body;
 
+  if (!user_id || !quiz_id || !answers || !Array.isArray(answers)) {
+    return res.status(400).json({ message: "Invalid request data" });
+  }
+
   let score = 0;
   const totalQuestions = answers.length;
 
+  // ✅ Fix: Convert `answers.map((a) => a.question_id)` into a properly formatted list
+  const questionIds = answers.map((a) => a.question_id);
+
+  if (questionIds.length === 0) {
+    return res.status(400).json({ message: "No questions submitted." });
+  }
+
+  // ✅ Dynamic placeholders for safe SQL execution
+  const placeholders = questionIds.map(() => "?").join(", ");
   const checkAnswersQuery = `
     SELECT question_id, correct_option 
-    FROM questions WHERE quiz_id = ? AND question_id IN (?)
+    FROM questions WHERE quiz_id = ? AND question_id IN (${placeholders})
   `;
 
-  db.query(checkAnswersQuery, [quiz_id, answers.map(a => a.question_id)], (err, correctAnswers) => {
+  db.query(checkAnswersQuery, [quiz_id, ...questionIds], (err, correctAnswers) => {
     if (err) {
       console.error("❌ Error checking answers:", err);
       return res.status(500).json({ message: "Database error" });
     }
 
     correctAnswers.forEach((correct) => {
-      const userAnswer = answers.find(a => a.question_id === correct.question_id);
+      const userAnswer = answers.find((a) => a.question_id === correct.question_id);
       if (userAnswer && userAnswer.answer === correct.correct_option) {
         score++;
       }
@@ -127,7 +121,9 @@ exports.submitQuiz = (req, res) => {
         console.error("❌ Error saving attempt:", err);
         return res.status(500).json({ message: "Error saving quiz result" });
       }
+      console.log(`✅ Quiz submitted! Score: ${score}/${totalQuestions}`);
       res.json({ message: "Quiz submitted successfully!", score, totalQuestions });
     });
   });
-};
+};  
+

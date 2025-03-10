@@ -7,7 +7,7 @@ const Navbar = () => {
   return (
     <nav style={styles.navbar}>
       <h1 style={styles.logo}>🦖 DinoCrack</h1>
-      <button onClick={() => navigate("/manage-questions")} style={styles.adminButton}>⚙ Manage Questions</button>
+      {/* <button onClick={() => navigate("/manage-questions")} style={styles.adminButton}>⚙ Manage Questions</button> */}
       <button onClick={() => navigate("/")} style={styles.logoutButton}>🚪 Logout</button>
     </nav>
   );
@@ -24,16 +24,16 @@ const styles = {
     fontSize: "18px",
     fontWeight: "bold",
   },
-  adminButton: {
-    backgroundColor: "#f39c12",
-    color: "#fff",
-    border: "none",
-    padding: "8px 15px",
-    cursor: "pointer",
-    borderRadius: "5px",
-    fontSize: "14px",
-    transition: "0.3s ease",
-  },
+//   adminButton: {
+//     backgroundColor: "#f39c12",
+//     color: "#fff",
+//     border: "none",
+//     padding: "8px 15px",
+//     cursor: "pointer",
+//     borderRadius: "5px",
+//     fontSize: "14px",
+//     transition: "0.3s ease",
+//   },
 };
 
 export default Navbar;

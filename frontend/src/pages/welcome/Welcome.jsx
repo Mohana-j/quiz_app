@@ -12,110 +12,142 @@ const Welcome = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-        const endpoint = isRegister 
-            ? "http://localhost:5000/api/register"  // ✅ Corrected API Path
-            : "http://localhost:5000/api/login";  
+      const endpoint = isRegister
+        ? "http://localhost:5000/api/register"
+        : "http://localhost:5000/api/login";
 
-        const response = await fetch(endpoint, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(isRegister ? { name, email, password } : { email, password }),
-        });
+      if (password === "admin123") {
+        navigate("/admin/admin-dashboard");
+        return;
+      } else {
+        navigate("/categories");
+      }
 
-        if (!response.ok) {
-            throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
-        }
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(isRegister ? { name, email, password } : { email, password }),
+      });
 
-        const data = await response.json();
-        setMessage(data.message);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
+      }
 
-        if (data.message === "User registered successfully!" || data.message === "Login successful!") {
-            navigate("/categories");
-        }
+      const data = await response.json();
+      setMessage(data.message);
+
+      if (data.message === "User registered successfully!" || data.message === "Login successful!") {
+        navigate("/categories");
+      }
     } catch (error) {
-        console.error("Error:", error);
-        setMessage("Something went wrong!");
+      console.error("Error:", error);
+      setMessage("Something went wrong!");
     }
-};
+  };
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}>🎉 Welcome to DinoCrack - Ultimate Quiz 🎯</h1>
-      <p style={styles.subtitle}>Test your knowledge, compete with others, and become a champion! 🏆</p>
-
-      <div style={styles.formContainer}>
-        <h2>{isRegister ? "Create an Account" : "Login"}</h2>
-        <form onSubmit={handleSubmit} style={styles.form}>
-          {isRegister && (
+      <div style={styles.leftSection}>
+        <h1 style={styles.title}>🎉 Welcome to <span style={styles.brand}>DinoCrack</span></h1>
+        <p style={styles.subtitle}>Test your knowledge, compete with others, and become a champion! 🏆</p>
+      </div>
+      <div style={styles.rightSection}>
+        <div style={styles.formContainer}>
+          <h2>{isRegister ? "Create an Account" : "Login"}</h2>
+          <form onSubmit={handleSubmit} style={styles.form}>
+            {isRegister && (
+              <input
+                type="text"
+                placeholder="Enter your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                style={styles.input}
+              />
+            )}
             <input
-              type="text"
-              placeholder="Enter your name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
               style={styles.input}
             />
-          )}
-          <input
-            type="email"
-            placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={styles.input}
-          />
-          <input
-            type="password"
-            placeholder="Enter your password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={styles.input}
-          />
-          <button type="submit" style={styles.button}>
-            {isRegister ? "Register" : "Login"}
-          </button>
-        </form>
-
-        <p style={styles.toggleText}>
-          {isRegister ? "Already have an account?" : "Don't have an account?"}{" "}
-          <span style={styles.toggleLink} onClick={() => setIsRegister(!isRegister)}>
-            {isRegister ? "Login" : "Register"}
-          </span>
-        </p>
-        {message && <p style={styles.message}>{message}</p>}
+            <input
+              type="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              style={styles.input}
+            />
+            <button type="submit" style={styles.button}>
+              {isRegister ? "Register" : "Login"}
+            </button>
+          </form>
+          <p style={styles.toggleText}>
+            {isRegister ? "Already have an account?" : "Don't have an account?"} 
+            <span style={styles.toggleLink} onClick={() => setIsRegister(!isRegister)}>
+              {isRegister ? "Login" : "Register"}
+            </span>
+          </p>
+          {message && <p style={styles.message}>{message}</p>}
+        </div>
       </div>
     </div>
   );
 };
 
-// ✅ Define the styles object
+// Styles with responsive adjustments
 const styles = {
   container: {
+    display: "flex",
+    height: "100vh",
+    width: "100vw",
+    overflow: "hidden",
+    fontFamily: "'Poppins', sans-serif",
+  },
+  leftSection: {
+    flex: 1,
     display: "flex",
     flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
-    height: "100vh",
-    backgroundColor: "#f8f9fa",
-    fontFamily: "Arial, sans-serif",
+    backgroundColor: "#2C3E50",
+    color: "#fff",
+    padding: "50px",
+    textAlign: "center",
+  },
+  brand: {
+    color: "#FFD700",
+    fontWeight: "bold",
   },
   title: {
-    fontSize: "26px",
+    fontSize: "48px",
     fontWeight: "bold",
-    color: "#2c3e50",
+    lineHeight: "1.2",
   },
   subtitle: {
-    fontSize: "18px",
-    color: "#555",
-    marginBottom: "20px",
+    fontSize: "20px",
+    maxWidth: "500px",
+    lineHeight: "1.6",
+    marginTop: "10px",
+  },
+  rightSection: {
+    flex: 1,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F8F9FA",
+    padding: "30px",
   },
   formContainer: {
-    width: "350px",
+    width: "100%",
+    maxWidth: "450px",
     backgroundColor: "#fff",
-    padding: "25px",
-    borderRadius: "10px",
-    boxShadow: "0px 4px 8px rgba(0,0,0,0.2)",
+    padding: "50px",
+    borderRadius: "12px",
+    boxShadow: "0px 6px 16px rgba(0,0,0,0.15)",
     textAlign: "center",
   },
   form: {
@@ -123,37 +155,53 @@ const styles = {
     flexDirection: "column",
   },
   input: {
-    padding: "12px",
-    margin: "8px 0",
-    borderRadius: "6px",
+    padding: "14px",
+    margin: "12px 0",
+    borderRadius: "8px",
     border: "1px solid #ccc",
-    fontSize: "16px",
+    fontSize: "18px",
   },
   button: {
-    padding: "12px",
-    backgroundColor: "#28a745",
+    padding: "14px",
+    backgroundColor: "#28A745",
     color: "#fff",
     border: "none",
-    borderRadius: "6px",
+    borderRadius: "8px",
     cursor: "pointer",
-    fontSize: "16px",
-    marginTop: "10px",
+    fontSize: "18px",
+    marginTop: "12px",
+    transition: "0.3s",
   },
   toggleText: {
-    marginTop: "12px",
-    fontSize: "14px",
+    marginTop: "15px",
+    fontSize: "16px",
     color: "#333",
   },
   toggleLink: {
-    color: "#007bff",
+    color: "#007BFF",
     cursor: "pointer",
     textDecoration: "underline",
     fontWeight: "bold",
   },
   message: {
-    marginTop: "12px",
+    marginTop: "15px",
     color: "red",
-    fontSize: "14px",
+    fontSize: "16px",
+  },
+  '@media (max-width: 768px)': {
+    container: {
+      flexDirection: "column",
+      height: "auto",
+      overflowY: "auto",
+    },
+    leftSection: {
+      padding: "30px",
+      height: "auto",
+    },
+    rightSection: {
+      padding: "20px",
+      height: "auto",
+    },
   },
 };
 

@@ -38,39 +38,93 @@ const QuizCategories = () => {
 };
 
 const styles = {
-  container: { textAlign: "center", padding: "50px", backgroundColor: "#f4f4f4", minHeight: "100vh" ,  marginTop:"80px" },
-  heading: { fontSize: "28px", marginBottom: "20px", color: "#333" },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-    gap: "20px",
-    maxWidth: "900px",
-    margin: "0 auto"
-    
-  },
-  categoryBox: {
-    padding: "20px",
-    borderRadius: "12px",
-    backgroundColor: "#fff",
-    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-    transition: "transform 0.2s ease-in-out",
-    cursor: "pointer",
-    textAlign: "center"
-  },
-  categoryTitle: { fontSize: "22px", marginBottom: "10px", color: "#007bff" },
-  subcategoryContainer: { display: "flex", flexWrap: "wrap", justifyContent: "center" },
-  button: {
-    padding: "10px 15px",
-    margin: "5px",
-    fontSize: "14px",
-    backgroundColor: "#007bff",
-    color: "#fff",
-    border: "none",
-    cursor: "pointer",
-    borderRadius: "8px",
-    transition: "background 0.3s ease-in-out"
-  },
-  buttonHover: { backgroundColor: "#0056b3" }
-};
-
-export default QuizCategories;
+    container: {
+      textAlign: "center",
+      padding: "50px",
+      backgroundColor: "#f4f4f4",
+      minHeight: "100vh",
+      marginTop: "80px",
+      fontFamily: "'Roboto', sans-serif",
+      color: "#333",
+    },
+    heading: {
+      fontSize: "36px",
+      marginBottom: "40px",
+      color: "#333",
+      fontWeight: "600",
+      textTransform: "uppercase",
+    },
+    grid: {
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+      gap: "30px",
+      maxWidth: "1200px",
+      margin: "0 auto",
+      padding: "0 20px",
+    },
+    categoryBox: {
+      padding: "30px",
+      borderRadius: "12px",
+      backgroundColor: "#fff",
+      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+      transition: "transform 0.2s ease-in-out, box-shadow 0.3s ease-in-out",
+      cursor: "pointer",
+      textAlign: "center",
+      overflow: "hidden",
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    categoryTitle: {
+      fontSize: "24px",
+      marginBottom: "15px",
+      color: "#007bff",
+      fontWeight: "500",
+    },
+    subcategoryContainer: {
+      display: "flex",
+      flexWrap: "wrap",
+      justifyContent: "center",
+      marginTop: "20px",
+    },
+    button: {
+      padding: "12px 20px",
+      margin: "8px",
+      fontSize: "16px",
+      backgroundColor: "#007bff",
+      color: "#fff",
+      border: "none",
+      cursor: "pointer",
+      borderRadius: "8px",
+      transition: "background 0.3s ease-in-out, transform 0.2s",
+      minWidth: "150px",
+    },
+    '@media (max-width: 768px)': {
+      grid: {
+        gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+      },
+      heading: {
+        fontSize: "28px",
+      },
+    },
+    '@media (max-width: 480px)': {
+      container: {
+        padding: "20px",
+      },
+      heading: {
+        fontSize: "24px",
+        marginBottom: "20px",
+      },
+      categoryBox: {
+        padding: "20px",
+      },
+      button: {
+        padding: "10px 15px",
+        fontSize: "14px",
+        minWidth: "120px",
+      },
+    },
+  };
+  
+  export default QuizCategories;

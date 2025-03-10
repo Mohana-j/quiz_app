@@ -1,16 +1,20 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes, useNavigate, useLocation } from "react-router-dom";
 import Welcome from "./pages/welcome/Welcome";
 import QuizCategories from "./pages/quiz/Categories";
 import QuizPage from "./pages/quiz/QuizPage";
-import AdminDashboard from "./pages/admin/AdminDashboard"; // ✅ Import Admin Dashboard
+import AdminDashboard from "./pages/admin/AdminDashboard"; // ✅ Admin Dashboard
+import AdminLogin from "./pages/admin/AdminLogin"; // ✅ Admin Login Page
 import Navbar from "./components/navbar/Navbar";
 import Sidebar from "./components/sidebar/Sidebar";
-import { useAuthStore } from "./store/useAuthStore"; // Zustand authentication store
+import { useAuthStore } from "./store/useAuthStore"; // ✅ Zustand authentication store
 
+/* =========================================
+   🚀 Layout for Pages with Sidebar & Navbar
+========================================= */
 const Layout = ({ children }) => {
   const location = useLocation();
-  const hideSidebarAndNavbar = location.pathname === "/";
+  const hideSidebarAndNavbar = location.pathname === "/" || location.pathname.startsWith("/admin");
 
   return (
     <div>
@@ -42,15 +46,15 @@ const Layout = ({ children }) => {
 };
 
 /* =========================================
-   🚀 Admin Access Restriction
+   🚀 Admin Authentication & Route Protection
 ========================================= */
 const AdminRoute = ({ children }) => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!user || user.role !== "admin") {
-      navigate("/categories"); // Redirect non-admins
+      navigate("/admin-login"); // ✅ Redirect non-admins to Admin Login
     }
   }, [user, navigate]);
 
@@ -64,17 +68,20 @@ const App = () => {
   return (
     <Router>
       <Routes>
+        {/* ✅ Public Routes */}
         <Route path="/" element={<Welcome />} />
         <Route path="/categories" element={<Layout><QuizCategories /></Layout>} />
         <Route path="/quiz/:category" element={<Layout><QuizPage /></Layout>} />
-        {/* ✅ Admin-Only Route */}
-        <Route path="/admin/manage-questions" element={<Layout><AdminRoute><AdminDashboard /></AdminRoute></Layout>} />
+
+        {/* ✅ Admin Routes (No Sidebar & Navbar) */}
+        <Route path="/admin-login" element={<AdminLogin />} />
+        <Route path="/admin/admin-dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
       </Routes>
     </Router>
   );
 };
 
-/* ✅ CSS for Layout */
+/* ✅ Styles */
 const styles = {
   navbarWrapper: {
     position: "fixed",

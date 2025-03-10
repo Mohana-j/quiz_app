@@ -10,14 +10,10 @@ const Sidebar = () => {
     <div style={styles.sidebar}>
       <h3>📌 Menu</h3>
       <button style={styles.button} onClick={() => navigate("/categories")}>📚 Categories</button>
-      <button style={styles.button} onClick={() => navigate("/leaderboard")}>🏆 Leaderboard</button>
+      <button style={styles.button} onClick={() => navigate("/leaderboard")}>🏆 Score History</button>
 
-      {/* ✅ Show "Manage Questions" only for Admins */}
-      {user?.role === "admin" && (
-        <button style={styles.adminButton} onClick={() => navigate("/admin/manage-questions")}>
-          ⚙️ Manage Questions
-        </button>
-      )}
+      
+      
     </div>
   );
 };
